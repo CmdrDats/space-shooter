@@ -1,6 +1,12 @@
 #+TITLE: A small space shooter in Clojure.
 #+STYLE: <style type='text/css'>pre.src { background: #505050; border-radius: 15px; color: #AEBDCC } html { font-family: helvetica; font-size: 15px; text-align: center; margin: 5em 0 0 0; vertical-align: middle;} body { width: 760px; text-align: left; margin: 0 auto; } </style>
 
+* Prelude
+
+You can clone the repo for this project here :
+https://github.com/cmdrdats/space-shooter or go to the rendered
+version : http://cmdrdats.github.io/space-shooter
+
 * Introduction
 
 So, at [[http://www.sugsa.org.za][SUGSA]] this year, I was a a talk by [[http://www.twitter.com/hermanlintvelt][@hermanlintvelt]], titled
