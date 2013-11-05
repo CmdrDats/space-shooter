@@ -1,0 +1,1599 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>A small space shooter in Clojure.</title>
+<meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
+<meta name="title" content="A small space shooter in Clojure."/>
+<meta name="generator" content="Org-mode"/>
+<meta name="generated" content="2013-11-05 22:54:34 SAST"/>
+<meta name="author" content="Deon Moolman"/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  html { font-family: Times, serif; font-size: 12pt; }
+  .title  { text-align: center; }
+  .todo   { color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #add8e6; font-weight:normal }
+  .target { }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
+  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
+  .center {margin-left:auto; margin-right:auto; text-align:center;}
+  p.verse { margin-left: 3% }
+  pre {
+	border: 1pt solid #AEBDCC;
+	background-color: #F3F5F7;
+	padding: 5pt;
+	font-family: courier, monospace;
+        font-size: 90%;
+        overflow:auto;
+  }
+  table { border-collapse: collapse; }
+  td, th { vertical-align: top;  }
+  th.right  { text-align:center;  }
+  th.left   { text-align:center;   }
+  th.center { text-align:center; }
+  td.right  { text-align:right;  }
+  td.left   { text-align:left;   }
+  td.center { text-align:center; }
+  dt { font-weight: bold; }
+  div.figure { padding: 0.5em; }
+  div.figure p { text-align: center; }
+  div.inlinetask {
+    padding:10px;
+    border:2px solid gray;
+    margin:10px;
+    background: #ffffcc;
+  }
+  textarea { overflow-x: auto; }
+  .linenr { font-size:smaller }
+  .code-highlighted {background-color:#ffff00;}
+  .org-info-js_info-navigation { border-style:none; }
+  #org-info-js_console-label { font-size:10px; font-weight:bold;
+                               white-space:nowrap; }
+  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
+                                 font-weight:bold; }
+  /*]]>*/-->
+</style>
+<style type='text/css'>pre.src { background: #505050; border-radius: 15px; color: #AEBDCC } html { font-family: helvetica; font-size: 15px; text-align: center; margin: 5em 0 0 0; vertical-align: middle;} body { width: 760px; text-align: left; margin: 0 auto; } </style>
+<script type="text/javascript">
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+
+</head>
+<body>
+
+<div id="preamble">
+
+</div>
+
+<div id="content">
+<h1 class="title">A small space shooter in Clojure.</h1>
+
+
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1 Introduction</a></li>
+<li><a href="#sec-2">2 Act one - OO Design.</a></li>
+<li><a href="#sec-3">3 Act two - Functional approach</a></li>
+<li><a href="#sec-4">4 Setup the project</a>
+<ul>
+<li><a href="#sec-4-1">4.1 Create the project</a></li>
+<li><a href="#sec-4-2">4.2 Setup Dependencies</a></li>
+<li><a href="#sec-4-3">4.3 Fire up the REPL</a></li>
+</ul>
+</li>
+<li><a href="#sec-5">5 Setup the state handling</a>
+<ul>
+<li><a href="#sec-5-1">5.1 DB Helper functions</a></li>
+<li><a href="#sec-5-2">5.2 Schema</a></li>
+<li><a href="#sec-5-3">5.3 Spawn functions</a></li>
+<li><a href="#sec-5-4">5.4 Try it out</a></li>
+</ul>
+</li>
+<li><a href="#sec-6">6 Game loop</a>
+<ul>
+<li><a href="#sec-6-1">6.1 Setup</a></li>
+<li><a href="#sec-6-2">6.2 Movement</a></li>
+<li><a href="#sec-6-3">6.3 Collision handling</a></li>
+<li><a href="#sec-6-4">6.4 Remove entities that have zero or lower health</a></li>
+<li><a href="#sec-6-5">6.5 Finally, putting it all together</a></li>
+</ul>
+</li>
+<li><a href="#sec-7">7 Visuals</a></li>
+<li><a href="#sec-8">8 Bootstrap into the game</a></li>
+<li><a href="#sec-9">9 Conclusions</a></li>
+<li><a href="#sec-10">10 org-mode</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+
+
+<p>
+So, at <a href="http://www.sugsa.org.za">SUGSA</a> this year, I was a a talk by <a href="http://www.twitter.com/hermanlintvelt">@hermanlintvelt</a>, titled
+"GRASPing OO Design". He was speaking about general OO design
+principles and I was amazed at the amount of  stuff that I had,
+essentially, unlearnt almost the instant I picked up Clojure.
+</p>
+<p>
+He presented the concept of assigning responsibilities to classes in
+OO and then proceeded to run through a fairly simple example of
+designing a basic game - described as (with me paraphrasing):
+</p>
+<p>
+"A Game, where the Player controls a Ship in a Level. The Ship has
+Guns and a Gun can fire Bullets. There are Enemy Ships that also have
+Guns that fire Bullets. Bullets hit Ships and cause damage. Ships have
+health and if a Player Ship is destroyed, he loses the Game.
+</p>
+<p>
+Furthermore, there is a Score Bar that keeps track of a Player Score,
+along with which Level the Player is currently on."
+</p>
+<p>
+There was also mention of sharing your score via social channels, and
+perhaps a notion of lives, but for the purpose of this exercise I'm
+just going to ignore those details.
+</p>
+<p>
+My thought while doing the exercise of designing which classes should
+exist and what their responsibilities should be was "What would this
+look like, should I build it in a Functional language, like Clojure?"
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Act one - OO Design.</h2>
+<div class="outline-text-2" id="text-2">
+
+
+<p>
+So let's pull it apart first in OO terms :
+</p>
+
+
+<p>
+<img src="oodesign.png"  alt="oodesign.png" />
+</p>
+<p>
+Here we see that a Game has Levels and a Player. The Level manages
+all kinds of ships, the Player also has a handle to a Ship and that
+any Ship can have Guns and Guns can own Bullets.
+</p>
+<p>
+Ok, so maybe not the <span style="text-decoration:underline;">best</span> design, but short of actually implementing
+this, it should do just fine.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> Act two - Functional approach</h2>
+<div class="outline-text-2" id="text-3">
+
+
+<p>
+The problem with the OO noun based approach, is that you are
+conflating your data with behaviour. Your data should exist as
+something you can store off and look at, as a snapshot at any point in
+time. Having mutable objects underneath your feet mean that your code
+gets kinda tricky to reason about.
+</p>
+<p>
+What you really want is the classic approach to processing the
+universe:
+</p>
+
+
+<p>
+<img src="process.png"  alt="process.png" />
+</p>
+<p>
+You want to run your state through a function, take the result, thread
+it through the next function, rinse, repeat. That's a great way of
+thinking about things in the functional world.
+</p>
+<p>
+So that got me to thinking about Component Entity Systems a little,
+and then the thought of just having everything as an entity. You
+basically end up with a list of hashmaps as your game state. Each
+hashmap simply represents some game entity - and they can refer to
+each other, a bit like foreign keys in a SQL database.
+</p>
+<p>
+That gets a bit tricky in terms of querying your data - luckily, I
+have just the tool for the job. Enter Datomic.
+</p>
+<p>
+In a nutshell, Datomic maintains an attribute schema, which lets you
+define arbitrary attributes that any entity might have and then a list
+of entities which you can assign these arbitrary attributes and values
+to.
+</p>
+<p>
+Let's build some code in an attempt to clear this up
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> Setup the project</h2>
+<div class="outline-text-2" id="text-4">
+
+
+
+</div>
+
+<div id="outline-container-4-1" class="outline-3">
+<h3 id="sec-4-1"><span class="section-number-3">4.1</span> Create the project</h3>
+<div class="outline-text-3" id="text-4-1">
+
+
+<p>
+The first thing we'll want to do is create a new project, so make sure
+you have <a href="http://leiningen.org">Leiningen</a> installed and fire this off in your terminal:
+</p>
+
+
+
+<pre class="src src-sh">lein new space-shooter
+</pre>
+
+
+<p>
+This will create you a space-shooter folder, you'll need to <b>cd</b> into
+it for the rest of this article.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4-2" class="outline-3">
+<h3 id="sec-4-2"><span class="section-number-3">4.2</span> Setup Dependencies</h3>
+<div class="outline-text-3" id="text-4-2">
+
+
+<p>
+Next up we open up the <code>project.clj</code> and setup the datomic and
+datomic-schema dependencies. We'll throw <a href="https://github.com/quil/quil">Quil</a> in so long, since we'll
+want to visualize stuff later on.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defproject</span> <span style="color: #8cd0d3; font-style: italic;">space-shooter</span> <span style="color: #CC9393;">"0.1.0-SNAPSHOT"</span>
+  <span style="color: #ddaa77; font-weight: bold;">:description</span> <span style="color: #CC9393;">"A simple space shooter implementation"</span>
+  <span style="color: #ddaa77; font-weight: bold;">:url</span> <span style="color: #CC9393;">"http://github.com/CmdrDats/space-shooter"</span>
+  <span style="color: #ddaa77; font-weight: bold;">:license</span> {<span style="color: #ddaa77; font-weight: bold;">:name</span> <span style="color: #CC9393;">"Eclipse Public License"</span>
+            <span style="color: #ddaa77; font-weight: bold;">:url</span> <span style="color: #CC9393;">"http://www.eclipse.org/legal/epl-v10.html"</span>}
+  <span style="color: #ddaa77; font-weight: bold;">:dependencies</span>
+  [[org.clojure/clojure <span style="color: #CC9393;">"1.5.1"</span>]
+   [com.datomic/datomic-free <span style="color: #CC9393;">"0.8.4254"</span>]
+   [datomic-schema <span style="color: #CC9393;">"1.0.2"</span>]
+   [quil <span style="color: #CC9393;">"1.6.0"</span>]]
+  <span style="color: #ddaa77; font-weight: bold;">:main</span> space-shooter.core<span style="color: #7f7f7f;">)</span>  
+
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-4-3" class="outline-3">
+<h3 id="sec-4-3"><span class="section-number-3">4.3</span> Fire up the REPL</h3>
+<div class="outline-text-3" id="text-4-3">
+
+
+<p>
+Since we want to do REPL based development, let's get it running with:
+</p>
+
+
+
+<pre class="src src-sh">lein repl
+</pre>
+
+
+<p>
+That should download the dependencies, give you an nrepl port
+(something like 58621) and a =&gt; REPL prompt. You can connect into this
+directly from your editor for your convenience, or just copy/paste the
+code snippets below into the REPL directly.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> Setup the state handling</h2>
+<div class="outline-text-2" id="text-5">
+
+
+<p>
+Now that we have that sorted, let's open up <code>src/space_shooter/db.clj</code> -
+This is where we'll define our attributes and add any utility
+functions we might want to use against our datomic db.
+</p>
+<p>
+First off, let's import the datomic-schema utility functions and the
+datomic api:
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">ns</span> space-shooter.db
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:use</span> [datomic-schema.schema <span style="color: #ddaa77; font-weight: bold;">:only</span> [defpart defschema fields]]<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:require</span> [datomic.api <span style="color: #ddaa77; font-weight: bold;">:as</span> d]<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:require</span> [datomic-schema.schema <span style="color: #ddaa77; font-weight: bold;">:as</span> s]<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+Then we want to setup a db-url, we'll just use the in memory db for
+now. Additionally, we'll add a couple of helper functions that just
+make it a bit quicker to do a few common things with the db.
+</p>
+
+</div>
+
+<div id="outline-container-5-1" class="outline-3">
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> DB Helper functions</h3>
+<div class="outline-text-3" id="text-5-1">
+
+
+<p>
+Now to setup datomic and some helper functions around that
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defonce</span> <span style="color: #8cd0d3; font-style: italic;">db-url</span> <span style="color: #CC9393;">"datomic:mem://testdb"</span><span style="color: #7f7f7f;">)</span>
+</pre>
+
+
+<p>
+<code>db</code> just gives us the current value of the database at the latest
+known point in time.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">db</span> [] <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/db</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/connect</span> db-url<span style="color: #7f7f7f;">)))</span>
+</pre>
+
+
+<p>
+<code>tx</code> will take a list of transactions and send them off to the
+transactor for storing into the db
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">tx</span> [t] <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/transact</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/connect</span> db-url<span style="color: #7f7f7f;">)</span> t<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+<code>e</code> is just a helper function we can use at the repl over a list of
+entity results to quickly visualise our entities
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #8cd0d3; font-style: italic;">e</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">comp</span> d/touch #<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/entity</span> <span style="color: #7f7f7f;">(</span>db<span style="color: #7f7f7f;">)</span> %<span style="color: #7f7f7f;">)</span> first<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+One last thing we'll need is an addition transactor
+function so that we don't end up overwriting accounting style values
+(like health, for instance.) - This is taken straight from the <a href="https://github.com/Datomic/day-of-datomic/blob/master/resources/day-of-datomic/clojure-data-functions.edn">Day of Datomic</a> sample code.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #8cd0d3; font-style: italic;">tx-functions</span>
+  [{<span style="color: #ddaa77; font-weight: bold;">:db/id</span> #db/id [<span style="color: #ddaa77; font-weight: bold;">:db.part/user</span>]
+    <span style="color: #ddaa77; font-weight: bold;">:db/ident</span> <span style="color: #ddaa77; font-weight: bold;">:inc</span>
+    <span style="color: #ddaa77; font-weight: bold;">:db/doc</span> <span style="color: #CC9393;">"Data function that increments value of attribute a by amount."</span>
+    <span style="color: #ddaa77; font-weight: bold;">:db/fn</span> #db/fn
+    {<span style="color: #ddaa77; font-weight: bold;">:lang</span> <span style="color: #CC9393;">"clojure"</span>
+     <span style="color: #ddaa77; font-weight: bold;">:params</span> [db e a amount]
+     <span style="color: #ddaa77; font-weight: bold;">:code</span> [[<span style="color: #ddaa77; font-weight: bold;">:db/add</span> e a
+             <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/entity</span> db e<span style="color: #7f7f7f;">)</span> a <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> amount<span style="color: #7f7f7f;">))</span>]]}}]<span style="color: #7f7f7f;">)</span>
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-5-2" class="outline-3">
+<h3 id="sec-5-2"><span class="section-number-3">5.2</span> Schema</h3>
+<div class="outline-text-3" id="text-5-2">
+
+
+<p>
+Right, now we're ready to define the attributes for our game. The
+first thing we want is a couple of global attributes we'll use on
+everything, namely <code>uuid</code> and <code>type</code>, we'll namespace those under
+<code>:entity</code>
+</p>
+<p>
+We'll be using <a href="http://github.com/yuppiechef/datomic-schema">datomic-schema</a> to define the schema of our db, since
+it's nice and concise.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defschema</span> <span style="color: #8cd0d3; font-style: italic;">entity</span>
+  <span style="color: #7f7f7f;">(</span>fields
+   [uuid <span style="color: #ddaa77; font-weight: bold;">:uuid</span>]
+   [type <span style="color: #ddaa77; font-weight: bold;">:keyword</span> <span style="color: #CC9393;">"The type of game entity"</span>]<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+Next up, we'll want to define some properties for all 'real' physical objects
+in the game, like position, velocity, size. We'll assume very simple
+rectangular bounding boxes for the collisions in this game. Also,
+let's throw in the concept that another entity will 'own' this thing.
+</p>
+<p>
+I think a good name for this will be <code>thing</code>, so that we don't confuse
+it with an overloaded concept of <code>object</code>
+</p>
+<p>
+We can assert that all <code>things</code> have health, and if they get to zero,
+it will be destroyed. In the case of bullets, we'll overload that as
+an amount of damage, for convenience.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defschema</span> <span style="color: #8cd0d3; font-style: italic;">thing</span>
+  <span style="color: #7f7f7f;">(</span>fields
+   [owner <span style="color: #ddaa77; font-weight: bold;">:ref</span>]
+   [posx <span style="color: #ddaa77; font-weight: bold;">:double</span>]
+   [posy <span style="color: #ddaa77; font-weight: bold;">:double</span>]
+   [velx <span style="color: #ddaa77; font-weight: bold;">:double</span>]
+   [vely <span style="color: #ddaa77; font-weight: bold;">:double</span>]
+   [width <span style="color: #ddaa77; font-weight: bold;">:double</span>]
+   [height <span style="color: #ddaa77; font-weight: bold;">:double</span>]
+   [health <span style="color: #ddaa77; font-weight: bold;">:long</span>]<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+This should be able to represent pretty much every <code>thing</code> in the
+game. Now for some meta objects
+</p>
+<p>
+We'll need some specific information about a player, like the name and score:
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defschema</span> <span style="color: #8cd0d3; font-style: italic;">player</span>
+  <span style="color: #7f7f7f;">(</span>fields
+   [name <span style="color: #ddaa77; font-weight: bold;">:string</span>]
+   [score <span style="color: #ddaa77; font-weight: bold;">:long</span>]<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+The level is really just a configuration that we'll use to setup the
+game to a certain state and spawn all the things in the game, so we
+have no need for tracking that in our game state.
+</p>
+<p>
+Similarly, the guns are just a configuration of the ship type, so
+there's no reason to track that as state either. Bullets are just
+small objects with velocity and 'health' with a bullet type.
+</p>
+<p>
+The last part here is to create a helper function that will setup our
+db, install our tx function and get the schema in
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">setup-db</span> [&amp; args]
+  <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/create-database</span> db-url<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span>tx <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">concat</span> tx-functions <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">s/build-schema</span> d/tempid<span style="color: #7f7f7f;">))))</span>
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-5-3" class="outline-3">
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> Spawn functions</h3>
+<div class="outline-text-3" id="text-5-3">
+
+
+<p>
+<code>new-ent</code> just sets up a transaction for a new entity by assigning it
+a temporary id, a sequential UUID (better for indexing) and reminds
+us to pick a type for our new entity in the game.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">new-ent</span> [type e]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">assoc</span> e
+    <span style="color: #ddaa77; font-weight: bold;">:db/id</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/tempid</span> <span style="color: #ddaa77; font-weight: bold;">:db.part/user</span><span style="color: #7f7f7f;">)</span>
+    <span style="color: #ddaa77; font-weight: bold;">:entity/uuid</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/squuid</span><span style="color: #7f7f7f;">)</span>
+    <span style="color: #ddaa77; font-weight: bold;">:entity/type</span> type<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+To make it a little easier to spawn <code>thing</code>'s in the game, let's define
+a spawning function:
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">spawn</span> [type health owner [posx posy] [width height] [velx vely]]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> [e {<span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> posx <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> posy
+           <span style="color: #ddaa77; font-weight: bold;">:thing/velx</span> velx <span style="color: #ddaa77; font-weight: bold;">:thing/vely</span> vely
+           <span style="color: #ddaa77; font-weight: bold;">:thing/width</span> width <span style="color: #ddaa77; font-weight: bold;">:thing/height</span> height
+           <span style="color: #ddaa77; font-weight: bold;">:thing/health</span> health}
+        e <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">if</span> owner <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">assoc</span> e <span style="color: #ddaa77; font-weight: bold;">:thing/owner</span> owner<span style="color: #7f7f7f;">)</span> e<span style="color: #7f7f7f;">)</span>]
+    <span style="color: #7f7f7f;">(</span>new-ent type e<span style="color: #7f7f7f;">)))</span>
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-5-4" class="outline-3">
+<h3 id="sec-5-4"><span class="section-number-3">5.4</span> Try it out</h3>
+<div class="outline-text-3" id="text-5-4">
+
+
+<p>
+Now we've defined a bunch of stuff, lets see what playing with the
+game state actually does. Make sure you've evaluated all of the above
+code in the REPL and you're currently in the space-shooter.db
+namespace (just type <code>(ns space-shooter.db)</code> if you're not)
+</p>
+<p>
+<b>NOTE:</b> the part after the =&gt; is what you enter in each of the
+ following examples, the bit after that will be a sample of the
+ response you receive.
+</p>
+<p>
+Let's define me as a player:
+</p>
+
+
+
+<pre class="src src-clojure"> =&gt; <span style="color: #7f7f7f;">(</span>new-ent {<span style="color: #ddaa77; font-weight: bold;">:player/name</span> <span style="color: #CC9393;">"Deon"</span> <span style="color: #ddaa77; font-weight: bold;">:player/score</span> 0} <span style="color: #ddaa77; font-weight: bold;">:player</span><span style="color: #7f7f7f;">)</span>
+
+{<span style="color: #ddaa77; font-weight: bold;">:entity/type</span> <span style="color: #ddaa77; font-weight: bold;">:player</span>,
+ <span style="color: #ddaa77; font-weight: bold;">:entity/uuid</span> #uuid <span style="color: #CC9393;">"527740ce-962f-49dd-9978-36e385980f4c"</span>,
+ <span style="color: #ddaa77; font-weight: bold;">:db/id</span> #db/id[<span style="color: #ddaa77; font-weight: bold;">:db.part/user</span> -1000000],
+ <span style="color: #ddaa77; font-weight: bold;">:player/score</span> 0,
+ <span style="color: #ddaa77; font-weight: bold;">:player/name</span> <span style="color: #CC9393;">"Deon"</span>}  
+</pre>
+
+
+<p>
+That's neat, but it hasn't done anything in the db yet - we're happy
+with it though, so let's store it off:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>tx [*1]<span style="color: #7f7f7f;">)</span>
+<span style="color: #94BFF3; font-weight: bold; font-style: italic;">ExceptionInfo</span> <span style="color: #ddaa77; font-weight: bold;">:db.error/db-not-found</span> <span style="color: #94BFF3; font-weight: bold; font-style: italic;">Could</span> not find testdb in catalog  datomic.error/raise <span style="color: #7f7f7f;">(</span>error.clj:46<span style="color: #7f7f7f;">)</span>
+</pre>
+
+
+<p>
+Whoops. We were a little too eager.. we actually need to create the
+database and setup the schema first!
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>setup-db<span style="color: #7f7f7f;">)</span>
+#&lt;promise$settable_future$reify__4424@5220c1b:
+{<span style="color: #ddaa77; font-weight: bold;">:db-before</span> datomic.db.Db@4f97ab72,
+ <span style="color: #ddaa77; font-weight: bold;">:db-after</span> datomic.db.Db@df8e05ff,
+ <span style="color: #ddaa77; font-weight: bold;">:tx-data</span> [...], <span style="color: #ddaa77; font-weight: bold;">:tempids</span> {...}}
+</pre>
+
+
+<p>
+Nice - notice how we have received an object back where we can get the
+value of the db before and the value after our transaction. That's
+universal for every transaction, including setting up the schema or
+just writing any arbitrary data. We also get a temporary id
+to actual id map back, which we could use to update our knowledge of
+the entities we've just committed into the db.
+</p>
+<p>
+For now, we ignore this result and try creating a new player again<sup><a class="footref" name="fnr.1" href="#fn.1">1</a></sup>:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>new-ent {<span style="color: #ddaa77; font-weight: bold;">:player/name</span> <span style="color: #CC9393;">"Deon"</span> <span style="color: #ddaa77; font-weight: bold;">:player/score</span> 0} <span style="color: #ddaa77; font-weight: bold;">:player</span><span style="color: #7f7f7f;">)</span>
+{<span style="color: #ddaa77; font-weight: bold;">:entity/type</span> <span style="color: #ddaa77; font-weight: bold;">:player</span>,
+ <span style="color: #ddaa77; font-weight: bold;">:entity/uuid</span> #uuid <span style="color: #CC9393;">"527740ce-962f-49dd-9978-36e385980f4c"</span>,
+ <span style="color: #ddaa77; font-weight: bold;">:db/id</span> #db/id[<span style="color: #ddaa77; font-weight: bold;">:db.part/user</span> -1000000],
+ <span style="color: #ddaa77; font-weight: bold;">:player/score</span> 0,
+ <span style="color: #ddaa77; font-weight: bold;">:player/name</span> <span style="color: #CC9393;">"Deon"</span>}
+=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #8cd0d3; font-style: italic;">p</span> *1<span style="color: #7f7f7f;">)</span>
+#'space-shooter.db/p
+=&gt; <span style="color: #7f7f7f;">(</span>tx [p]<span style="color: #7f7f7f;">)</span>
+#&lt;promise$settable_future$reify__4424@3f901572:
+{<span style="color: #ddaa77; font-weight: bold;">:db-before</span> datomic.db.Db@df8e05ff,
+ <span style="color: #ddaa77; font-weight: bold;">:db-after</span> datomic.db.Db@ee7763e0,
+ <span style="color: #ddaa77; font-weight: bold;">:tx-data</span> [...], <span style="color: #ddaa77; font-weight: bold;">:tempids</span> {...}}&gt;
+</pre>
+
+
+<p>
+Now we can query for the player to make sure it's there:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:entity/type</span> <span style="color: #ddaa77; font-weight: bold;">:player</span>]] <span style="color: #7f7f7f;">(</span>db<span style="color: #7f7f7f;">))</span>
+#{[17592186045418]}
+=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #7CB8BB;">e</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">first</span> *1<span style="color: #7f7f7f;">))</span>
+{<span style="color: #ddaa77; font-weight: bold;">:entity/type</span> <span style="color: #ddaa77; font-weight: bold;">:player</span>,
+ <span style="color: #ddaa77; font-weight: bold;">:entity/uuid</span> #uuid <span style="color: #CC9393;">"527740ce-962f-49dd-9978-36e385980f4c"</span>,
+ <span style="color: #ddaa77; font-weight: bold;">:player/score</span> 0, <span style="color: #ddaa77; font-weight: bold;">:player/name</span> <span style="color: #CC9393;">"Deon"</span>,
+ <span style="color: #ddaa77; font-weight: bold;">:db/id</span> 17592186045418}
+</pre>
+
+
+<p>
+And there it is. We should be able store any arbitrary entity we
+should need in the game.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-6" class="outline-2">
+<h2 id="sec-6"><span class="section-number-2">6</span> Game loop</h2>
+<div class="outline-text-2" id="text-6">
+
+
+
+</div>
+
+<div id="outline-container-6-1" class="outline-3">
+<h3 id="sec-6-1"><span class="section-number-3">6.1</span> Setup</h3>
+<div class="outline-text-3" id="text-6-1">
+
+
+<p>
+Well now we get to the crunch - what does the game loop look like?
+</p>
+<p>
+First we setup our namespace in <code>src/space_shooter/loop.clj</code>
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">ns</span> space-shooter.loop
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:require</span>
+   [datomic.api <span style="color: #ddaa77; font-weight: bold;">:as</span> d]
+   [space-shooter.db <span style="color: #ddaa77; font-weight: bold;">:as</span> db]<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+We're going to write a few functions that will adhere to the signature
+of <code>(defn actions [elapsedms db])</code> which will simply query the current db and
+return a list of transactions that it should apply for this step. For
+example, a function that would spawn a new bullet at every step (very fast.) :
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">spawn-bullet</span> [elapsed db]
+  [<span style="color: #7f7f7f;">(</span>spawn <span style="color: #ddaa77; font-weight: bold;">:bullet</span> 10 nil [100.0 100.0] [5.0 5.0] [0.0 -5.0]<span style="color: #7f7f7f;">)</span>]<span style="color: #7f7f7f;">)</span>
+</pre>
+
+
+<p>
+If we wanted to make it shoot only a bullet every second, we could
+keep a timeout value as an entity in the db, but we're going to ignore
+that in favour of a simple example.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-6-2" class="outline-3">
+<h3 id="sec-6-2"><span class="section-number-3">6.2</span> Movement</h3>
+<div class="outline-text-3" id="text-6-2">
+
+
+<p>
+Let's write a bit of code that will look for all the entities and move
+them along according to their velocity and elapsed time.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">add-velocity</span> [elapsed thing]
+  [[<span style="color: #ddaa77; font-weight: bold;">:inc</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:db/id</span> thing<span style="color: #7f7f7f;">)</span> <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">*</span> elapsed <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/velx</span> thing<span style="color: #7f7f7f;">))</span>]
+   [<span style="color: #ddaa77; font-weight: bold;">:inc</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:db/id</span> thing<span style="color: #7f7f7f;">)</span> <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">*</span> elapsed <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/vely</span> thing<span style="color: #7f7f7f;">))</span>]]<span style="color: #7f7f7f;">)</span>
+
+<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">movements</span> [elapsed db]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span>
+   <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span>]] db<span style="color: #7f7f7f;">)</span>
+   <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">mapcat</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">comp</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">partial</span> add-velocity elapsed<span style="color: #7f7f7f;">)</span>
+                 <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">partial</span> d/entity db<span style="color: #7f7f7f;">)</span> first<span style="color: #7f7f7f;">))))</span>
+</pre>
+
+
+<p>
+So <code>movements</code> will look for all entities with an attribute
+of :thing/posx that exists and put together tx functions for adding
+all the movements to them. We're using the threading macro here to
+take the results of <code>d/q</code> and pass it as the last argument of <code>mapcat</code>
+</p>
+<p>
+Let's check that this actually works? First, we create a ship :
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/spawn</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span> 10 nil [100.0 100.0] [10.0 10.0] [1.0 2.0]<span style="color: #7f7f7f;">)</span>]<span style="color: #7f7f7f;">)</span>
+#&lt;promise$settable_future$reify__4424@3cde8a82:
+{<span style="color: #ddaa77; font-weight: bold;">:db-before</span> datomic.db.Db@eebfe950,
+ <span style="color: #ddaa77; font-weight: bold;">:db-after</span> datomic.db.Db@c77c1b7f,
+ <span style="color: #ddaa77; font-weight: bold;">:tx-data</span> [...], <span style="color: #ddaa77; font-weight: bold;">:tempids</span> {...}}&gt;
+</pre>
+
+
+<p>
+Great, our ship has been spawned - now let's see how we'd move it:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>movements 100 <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))</span>
+<span style="color: #7f7f7f;">(</span>[<span style="color: #ddaa77; font-weight: bold;">:inc</span> 17592186045422 <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> 100.0]
+ [<span style="color: #ddaa77; font-weight: bold;">:inc</span> 17592186045422 <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> 200.0]<span style="color: #7f7f7f;">)</span>
+=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> *1<span style="color: #7f7f7f;">)</span>
+#&lt;promise$settable_future$reify__4424@4d036908:
+{<span style="color: #ddaa77; font-weight: bold;">:db-before</span> datomic.db.Db@8f7ff0d8,
+ <span style="color: #ddaa77; font-weight: bold;">:db-after</span> datomic.db.Db@8ee561ed,
+ <span style="color: #ddaa77; font-weight: bold;">:tx-data</span> [...], <span style="color: #ddaa77; font-weight: bold;">:tempids</span> {}}
+</pre>
+
+
+<p>
+That looks good, let's have a look at our ship and see if the position
+has changed accordingly:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">map</span> db/<span style="color: #7CB8BB;">e</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:entity/type</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span>]] <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">)))</span>
+<span style="color: #7f7f7f;">(</span>{<span style="color: #ddaa77; font-weight: bold;">:entity/type</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span>,
+  <span style="color: #ddaa77; font-weight: bold;">:entity/uuid</span> #uuid <span style="color: #CC9393;">"5278077d-3497-4fdb-94fe-a032633d15f1"</span>,
+  <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> 200.0, <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> 300.0,
+  <span style="color: #ddaa77; font-weight: bold;">:thing/height</span> 10.0, <span style="color: #ddaa77; font-weight: bold;">:thing/vely</span> 2.0,
+  <span style="color: #ddaa77; font-weight: bold;">:thing/width</span> 10.0, <span style="color: #ddaa77; font-weight: bold;">:thing/velx</span> 1.0,
+  <span style="color: #ddaa77; font-weight: bold;">:thing/health</span> 10, <span style="color: #ddaa77; font-weight: bold;">:db/id</span> 17592186045422}<span style="color: #7f7f7f;">)</span>
+</pre>
+
+
+<p>
+Beautiful. That worked nicely.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-6-3" class="outline-3">
+<h3 id="sec-6-3"><span class="section-number-3">6.3</span> Collision handling</h3>
+<div class="outline-text-3" id="text-6-3">
+
+
+<p>
+Let's keep this clean and assume that anything that gets hit by
+something else loses as much health as the the thing that hit it.
+</p>
+<p>
+We'll start with creating some things in our db that actually collide
+and build the query that finds them:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span>
+ [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/spawn</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span> 10 nil [200.0 200.0] [10.0 10.0] [1.0 2.0]<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/spawn</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span> 6  nil [205.0 205.0] [10.0 10.0] [1.0 2.0]<span style="color: #7f7f7f;">)</span>]<span style="color: #7f7f7f;">)</span>
+#&lt;promise$settable_future$reify__4424@45d017d4:....
+</pre>
+
+
+<p>
+Two ships are going to collide! We expect one to come out with a
+health of 4 and the other a health of -4. We'll take care of actually
+removing an entity in a seperate cleanup function.
+</p>
+<p>
+So, how do we find them? We can start with a collides function that
+takes an entity's position and size and another position and size and
+compare them for collision (single axis collision)
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">collides</span> [ep es op os]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">or</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">and</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&gt;</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> ep es<span style="color: #7f7f7f;">)</span> op<span style="color: #7f7f7f;">)</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&lt;</span> ep <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> op os<span style="color: #7f7f7f;">)))</span>
+      <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">and</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&gt;</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> op os<span style="color: #7f7f7f;">)</span> ep<span style="color: #7f7f7f;">)</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&lt;</span> op <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> ep es<span style="color: #7f7f7f;">)))))</span>
+</pre>
+
+
+<p>
+Then we can run this query to find them:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span>
+    '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e ?o <span style="color: #ddaa77; font-weight: bold;">:where</span>
+      [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> ?epx]
+      [?e <span style="color: #ddaa77; font-weight: bold;">:thing/width</span> ?ew]
+      [?o <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> ?opx]
+      [?o <span style="color: #ddaa77; font-weight: bold;">:thing/width</span> ?ow]
+      [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">space-shooter.loop/collides</span> ?epx ?ew ?opx ?ow<span style="color: #7f7f7f;">)</span>]
+      [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> ?epy]
+      [?e <span style="color: #ddaa77; font-weight: bold;">:thing/height</span> ?eh]
+      [?o <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> ?opy]
+      [?o <span style="color: #ddaa77; font-weight: bold;">:thing/height</span> ?oh]
+      [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">space-shooter.loop/collides</span> ?epy ?eh ?opy ?oh<span style="color: #7f7f7f;">)</span>]
+      [<span style="color: #7f7f7f;">(</span>!= ?e ?o<span style="color: #7f7f7f;">)</span>]] <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))</span>
+#{[17592186045419 17592186045420] [17592186045420 17592186045419]}
+</pre>
+
+
+<p>
+This shows us that ..419 collides with ..420 and ..420 collides with
+..419. Excellent. Let's make sure another ship won't also collide if
+outside the bounds :
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/spawn</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span> 100 nil [100.0 100.0] [10.0 10.0] [1.0 2.0]<span style="color: #7f7f7f;">)</span>]<span style="color: #7f7f7f;">)</span>
+#&lt;promise$settable_future$reify__4424@6596f6ef:...
+</pre>
+
+
+<p>
+And if we run the query again, we see it hasn't affected our result.
+Hurrah! But is there a slightly more succinct way of expressing this query?
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">collides</span> [db e o pos size]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> [ent <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/entity</span> db e<span style="color: #7f7f7f;">)</span>
+        oth <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/entity</span> db o<span style="color: #7f7f7f;">)</span>
+        ep <span style="color: #7f7f7f;">(</span>pos ent<span style="color: #7f7f7f;">)</span> es <span style="color: #7f7f7f;">(</span>size ent<span style="color: #7f7f7f;">)</span>
+        op <span style="color: #7f7f7f;">(</span>pos oth<span style="color: #7f7f7f;">)</span> os <span style="color: #7f7f7f;">(</span>size oth<span style="color: #7f7f7f;">)</span>]
+    <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">or</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">and</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&gt;</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> ep es<span style="color: #7f7f7f;">)</span> op<span style="color: #7f7f7f;">)</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&lt;</span> ep <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> op os<span style="color: #7f7f7f;">)))</span>
+        <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">and</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&gt;</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> op os<span style="color: #7f7f7f;">)</span> ep<span style="color: #7f7f7f;">)</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&lt;</span> op <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> ep es<span style="color: #7f7f7f;">))))))</span>
+</pre>
+
+
+<p>
+Then we can express our query like so:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span>
+    '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e ?o <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span>] [?o <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span>]
+      [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">space-shooter.loop/collides</span> $ ?e ?o <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> <span style="color: #ddaa77; font-weight: bold;">:thing/width</span><span style="color: #7f7f7f;">)</span>]
+      [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">space-shooter.loop/collides</span> $ ?e ?o <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> <span style="color: #ddaa77; font-weight: bold;">:thing/height</span><span style="color: #7f7f7f;">)</span>]
+      [<span style="color: #7f7f7f;">(</span>!= ?e ?o<span style="color: #7f7f7f;">)</span>]] <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))</span>
+#{[17592186045419 17592186045420] [17592186045420 17592186045419]}
+</pre>
+
+
+<p>
+Same results and slightly more succinct query, but I'd venture to
+guess that it would be a bit slower. Don't quote me on it though.
+</p>
+<p>
+Anyhow - we'll go for the latter approach, since we can always
+optimize later.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">collision-damage</span> [[thing other]]
+  [[<span style="color: #ddaa77; font-weight: bold;">:inc</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:db/id</span> thing<span style="color: #7f7f7f;">)</span> <span style="color: #ddaa77; font-weight: bold;">:thing/health</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">-</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/health</span> other<span style="color: #7f7f7f;">))</span>]]<span style="color: #7f7f7f;">)</span>
+
+<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">collisions</span> [elapsed db]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span>
+   <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span>
+    '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e ?o <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span>] [?o <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span>]
+      [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">space-shooter.loop/collides</span> $ ?e ?o <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> <span style="color: #ddaa77; font-weight: bold;">:thing/width</span><span style="color: #7f7f7f;">)</span>]
+      [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">space-shooter.loop/collides</span> $ ?e ?o <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> <span style="color: #ddaa77; font-weight: bold;">:thing/height</span><span style="color: #7f7f7f;">)</span>]
+      [<span style="color: #7f7f7f;">(</span>!= ?e ?o<span style="color: #7f7f7f;">)</span>]] db<span style="color: #7f7f7f;">)</span>
+   <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">mapcat</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">comp</span> collision-damage (fn [t] <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">map</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">partial</span> d/entity db<span style="color: #7f7f7f;">)</span> t<span style="color: #7f7f7f;">))))))</span>
+</pre>
+
+
+<p>
+And if we run this :
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>collisions 0 <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))</span>
+<span style="color: #7f7f7f;">(</span>[<span style="color: #ddaa77; font-weight: bold;">:inc</span> 17592186045419 <span style="color: #ddaa77; font-weight: bold;">:thing/health</span> -6] [<span style="color: #ddaa77; font-weight: bold;">:inc</span> 17592186045420 <span style="color: #ddaa77; font-weight: bold;">:thing/health</span> -10]<span style="color: #7f7f7f;">)</span>
+=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> *1<span style="color: #7f7f7f;">)</span>
+#&lt;promise$settable_future$reify__4424@23f23303:...
+=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">map</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">comp</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">juxt</span> <span style="color: #ddaa77; font-weight: bold;">:db/id</span> <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> <span style="color: #ddaa77; font-weight: bold;">:thing/health</span><span style="color: #7f7f7f;">)</span> db/<span style="color: #7CB8BB;">e</span><span style="color: #7f7f7f;">)</span>
+        <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:entity/type</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span>]] <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">)))</span>
+<span style="color: #7f7f7f;">(</span>[17592186045420 205.0 -4]
+ [17592186045419 200.0 4]
+ [17592186045422 100.0 100]<span style="color: #7f7f7f;">)</span>
+</pre>
+
+
+<p>
+Looks great, so we commit the transaction and check the ship healths
+and see that they have indeed been correctly changed.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-6-4" class="outline-3">
+<h3 id="sec-6-4"><span class="section-number-3">6.4</span> Remove entities that have zero or lower health</h3>
+<div class="outline-text-3" id="text-6-4">
+
+
+<p>
+Now, of course, we have these pesky zero health ships running amok,
+ruining our day. We best be getting rid of them.
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/health</span> ?h] [<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&lt;=</span> ?h 0<span style="color: #7f7f7f;">)</span>]] <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))</span>
+#{[17592186045420]} 
+</pre>
+
+
+<p>
+Running a query to find all things that have negative health shows
+that &hellip;420 indeed has zero or less health, so we should be able to
+remove that entity and be done.
+</p>
+<p>
+As an aside, we also want to remove anything outside our 'playing
+field', so lets make this an arbitrary size and get rid of those
+entities too.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">remove-chaff</span> [elapsed db]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span>
+   <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">concat</span>
+    <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/health</span> ?h] [<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&lt;=</span> ?h 0<span style="color: #7f7f7f;">)</span>]] db<span style="color: #7f7f7f;">)</span>
+    <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> ?x] [<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&lt;=</span> ?x -100<span style="color: #7f7f7f;">)</span>]] db<span style="color: #7f7f7f;">)</span>
+    <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> ?y] [<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&lt;=</span> ?y -100<span style="color: #7f7f7f;">)</span>]] db<span style="color: #7f7f7f;">)</span>
+    <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> ?x] [<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&gt;=</span> ?x 1000<span style="color: #7f7f7f;">)</span>]] db<span style="color: #7f7f7f;">)</span>
+    <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> ?y] [<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">&gt;=</span> ?y 1000<span style="color: #7f7f7f;">)</span>]] db<span style="color: #7f7f7f;">))</span>
+   <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">map</span> (fn [i] [<span style="color: #ddaa77; font-weight: bold;">:db.fn/retractEntity</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">first</span> i<span style="color: #7f7f7f;">)</span>]<span style="color: #7f7f7f;">))))</span>
+</pre>
+
+
+<p>
+Note: This would essentially remove everything known about the entity,
+which would make it instantly vanish. In a real game, you
+probably want to set some kind of 'busy blowing up' state so that you
+can animate that before actually getting removed - either that or just
+spawn an effect in the ship's place. But this article is long enough
+without introducing effects!
+</p>
+<p>
+Give that a test run:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>remove-chaff 0 <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))</span>
+<span style="color: #7f7f7f;">(</span>[<span style="color: #ddaa77; font-weight: bold;">:db.fn/retractEntity</span> 17592186045420]<span style="color: #7f7f7f;">)</span>
+=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> *1<span style="color: #7f7f7f;">)</span>
+#&lt;promise$settable_future$reify__4424@7a2fc0ff:...
+=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #8cd0d3; font-style: italic;">t</span> *1<span style="color: #7f7f7f;">)</span>
+#'space-shooter.loop/t
+</pre>
+
+
+<p>
+Here you'll see I stored off the result of the transaction into <code>t</code>, I
+want to quickly show that the latest db value doesn't have the entity
+anymore:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>remove-chaff 0 <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))</span>
+<span style="color: #7f7f7f;">()</span>
+</pre>
+
+
+<p>
+But, if I run <code>remove-chaff</code> against the old value&hellip;.
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>remove-chaff 0 <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:db-before</span> @t<span style="color: #7f7f7f;">))</span>
+<span style="color: #7f7f7f;">(</span>[<span style="color: #ddaa77; font-weight: bold;">:db.fn/retractEntity</span> 17592186045420]<span style="color: #7f7f7f;">)</span>
+</pre>
+
+
+<p>
+Neato. So if remove-chaff didn't work as expected, at least I just
+step back into a previous state, run it until it does work correctly.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-6-5" class="outline-3">
+<h3 id="sec-6-5"><span class="section-number-3">6.5</span> Finally, putting it all together</h3>
+<div class="outline-text-3" id="text-6-5">
+
+
+<p>
+Finally, we'll want a <code>game-loop</code> function that will take the current state
+and produces a list of transactions to update the game state to the
+next 'generation'.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">game-loop</span> [elapsed db]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">reduce</span>
+   (fn [[db tx] f]
+     <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> [txes <span style="color: #7f7f7f;">(</span>f elapsed db<span style="color: #7f7f7f;">)</span>]
+       [<span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:db-after</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/with</span> db txes<span style="color: #7f7f7f;">))</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">concat</span> tx txes<span style="color: #7f7f7f;">)</span>]<span style="color: #7f7f7f;">))</span>
+   [db []]
+   [remove-chaff movements collisions]<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+Testing this function out should give you something like:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>game-loop 5 <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))</span>
+[datomic.db.Db@78eee823
+ <span style="color: #7f7f7f;">(</span>[<span style="color: #ddaa77; font-weight: bold;">:inc</span> 17592186045419 <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> 5.0]
+  [<span style="color: #ddaa77; font-weight: bold;">:inc</span> 17592186045419 <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> 10.0]
+  [<span style="color: #ddaa77; font-weight: bold;">:inc</span> 17592186045422 <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> 5.0]
+  [<span style="color: #ddaa77; font-weight: bold;">:inc</span> 17592186045422 <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> 10.0]<span style="color: #7f7f7f;">)</span>]
+</pre>
+
+
+<p>
+The game loop function only aggregates the changes that needs to be
+made and returns that list of transactions along with a db value 'as
+if' they have all been applied. Now all we need to do to make it step
+is commit those transactions:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">second</span> *1<span style="color: #7f7f7f;">))</span>
+#&lt;promise$settable_future$reify__4424@2035938e:...
+</pre>
+
+
+<p>
+And you should see some positions being updated. Now you can imagine
+that part is just a case of a simple spinning loop - we can control
+the speed of how fast that should cycle.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-7" class="outline-2">
+<h2 id="sec-7"><span class="section-number-2">7</span> Visuals</h2>
+<div class="outline-text-2" id="text-7">
+
+
+<p>
+Alright, I want to get something visual on the screen at this point.
+Raw data is great and all, but doesn't beat seeing something tangible
+happening!
+</p>
+<p>
+So, let's open up a new file for this at
+<code>src/space_shooter/ui.clj</code> and set it up like:
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">ns</span> space-shooter.ui
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:use</span> [quil.core]<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:require</span> [datomic.api <span style="color: #ddaa77; font-weight: bold;">:as</span> d]<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:require</span> [space-shooter.db <span style="color: #ddaa77; font-weight: bold;">:as</span> db]<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+Ok, Quil needs a setup function so that it can prepare your canvas:
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">setup</span> []
+  <span style="color: #7f7f7f;">(</span>smooth<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span>frame-rate 10<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span>background 200<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+Then we're going to use a multi-method to dispatch the kind of thing
+we're wanting to draw, so defining that would look like:
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defmulti</span> <span style="color: #8cd0d3; font-style: italic;">render-thing</span> <span style="color: #ddaa77; font-weight: bold;">:entity/type</span><span style="color: #7f7f7f;">)</span>
+</pre>
+
+
+<p>  
+And then a :ship and :default implementation. You probably want to
+make the :default implementation somewhat obvious, but a small 5x5
+circle will do.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defmethod</span> <span style="color: #8cd0d3; font-style: italic;">render-thing</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span> [e]
+  <span style="color: #7f7f7f;">(</span>ellipse <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/posx</span> e<span style="color: #7f7f7f;">)</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/posy</span> e<span style="color: #7f7f7f;">)</span>
+           <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/width</span> e<span style="color: #7f7f7f;">)</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/height</span> e<span style="color: #7f7f7f;">)))</span>
+
+<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defmethod</span> <span style="color: #8cd0d3; font-style: italic;">render-thing</span> <span style="color: #ddaa77; font-weight: bold;">:default</span> [e]
+  <span style="color: #7f7f7f;">(</span>ellipse <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/posx</span> e<span style="color: #7f7f7f;">)</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/posy</span> e<span style="color: #7f7f7f;">)</span>
+           <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/width</span> e<span style="color: #7f7f7f;">)</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">:thing/height</span> e<span style="color: #7f7f7f;">)))</span>
+
+</pre>
+
+
+<p>
+Circles aren't particularly exciting, but at least I don't have to
+worry about heading at this point. I'll leave that as an exercise for
+you, dear reader.
+</p>
+<p>  
+Another thing we'd like is a little line to show velocity, so we can
+see where the ship is headed.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">render-velocity</span> [{x <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> y <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> vx <span style="color: #ddaa77; font-weight: bold;">:thing/velx</span> vy <span style="color: #ddaa77; font-weight: bold;">:thing/vely</span>}]
+  <span style="color: #7f7f7f;">(</span>line x y <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> x <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">*</span> vx 10<span style="color: #7f7f7f;">))</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> y <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">*</span> vy 10<span style="color: #7f7f7f;">))))</span>
+</pre>
+
+
+<p>
+Last thing Quil would like is a draw function that it will call as
+rapidly as it needs to fulfill the frame-rate you specified in the
+setup function.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">draw</span> []
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> [db <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">)</span>]
+    <span style="color: #7f7f7f;">(</span>background 200<span style="color: #7f7f7f;">)</span>
+    <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">doseq</span> [es <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span>]] db<span style="color: #7f7f7f;">)</span>
+            <span style="color: #ddaa77; font-weight: bold;">:let</span> [ent <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/entity</span> db <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">first</span> es<span style="color: #7f7f7f;">))</span>]]
+      <span style="color: #7f7f7f;">(</span>render-thing ent<span style="color: #7f7f7f;">)</span>
+      <span style="color: #7f7f7f;">(</span>render-velocity ent<span style="color: #7f7f7f;">))))</span>  
+</pre>
+
+
+<p>  
+Notice that in the beginning of this function, we're getting the
+current database value - that affords us the knowledge that the state
+we're currently trying to render is stable, and won't change under our
+feet.
+</p>
+<p>
+We then just query for any entry in the database that has a
+<code>:thing/posx</code> attribute assigned, push them through the d/entity
+function so that we can get at the other attributes and render them.
+</p>
+<p>
+Lastly, we fire up the sketch!
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">start-sketch</span> []
+  <span style="color: #7f7f7f;">(</span>sketch
+   <span style="color: #ddaa77; font-weight: bold;">:title</span> <span style="color: #CC9393;">"Simple Space Shooter"</span>
+   <span style="color: #ddaa77; font-weight: bold;">:setup</span> #'setup
+   <span style="color: #ddaa77; font-weight: bold;">:draw</span> #'draw
+   <span style="color: #ddaa77; font-weight: bold;">:size</span> [800 600]<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+Then call <code>(start-sketch)</code> in the REPL.
+</p>
+<p>
+If you still have the db state from earlier, you should see two neat
+circles in it's own window. Let's switch over to our
+space-shooter.loop and move them!
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">ns</span> space-shooter.loop<span style="color: #7f7f7f;">)</span>
+nil
+=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">second</span> <span style="color: #7f7f7f;">(</span>game-loop 1 <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))))</span>
+#&lt;promise$settable_future$reify__4424@775dfb9d:...
+</pre>
+
+
+<p>
+Nice - did you see them move a pixel or two? Of course, their velocity
+is ridiculous if this represented a single millisecond.. anyhow. Maybe
+try animating them a little
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">doseq</span> [_ <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">range</span> 50<span style="color: #7f7f7f;">)</span>]
+     <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">second</span> <span style="color: #7f7f7f;">(</span>game-loop 0.3 <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))))</span>
+     <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">Thread/sleep</span> 50<span style="color: #7f7f7f;">))</span>
+nil
+</pre>
+
+
+<p>
+You should see your little ships meandering off into the distance.
+Cool. Notice that the game loop is running off a completely different
+thread to the UI - because the state is effectively immutable this is
+completely safe without any notion of locking involved.
+</p>
+<p>
+One last thing I want to add before we tie everything together is some
+form of input, so let's make ships run to the mouse, left click fires
+off bullets toward the mouse and right click spawn a new ship at the
+cursor.
+</p>
+<p>
+Weird game, but whatever, let's build some mouse listeners. Starting
+with the mouse movement:
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">vel-towards</span> [x y {px <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> py <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> e <span style="color: #ddaa77; font-weight: bold;">:db/id</span>}]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> [vx <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">-</span> x px<span style="color: #7f7f7f;">)</span> vy <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">-</span> y py<span style="color: #7f7f7f;">)</span> m <span style="color: #7f7f7f;">(</span>mag vx vy<span style="color: #7f7f7f;">)</span>]
+    [[<span style="color: #ddaa77; font-weight: bold;">:db/add</span> e <span style="color: #ddaa77; font-weight: bold;">:thing/velx</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">double</span> <span style="color: #7f7f7f;">(</span>norm vx 0 m<span style="color: #7f7f7f;">))</span>]
+     [<span style="color: #ddaa77; font-weight: bold;">:db/add</span> e <span style="color: #ddaa77; font-weight: bold;">:thing/vely</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">double</span> <span style="color: #7f7f7f;">(</span>norm vy 0 m<span style="color: #7f7f7f;">))</span>]]<span style="color: #7f7f7f;">))</span>
+
+<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">mouse-moved</span> []
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> [db <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">)</span>
+        [x y] [<span style="color: #7f7f7f;">(</span>mouse-x<span style="color: #7f7f7f;">)</span> <span style="color: #7f7f7f;">(</span>mouse-y<span style="color: #7f7f7f;">)</span>]]
+    <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span>
+     <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:entity/type</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span>]] db<span style="color: #7f7f7f;">)</span>
+     <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">mapcat</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">comp</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">partial</span> vel-towards x y<span style="color: #7f7f7f;">)</span>
+                   <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">partial</span> d/entity db<span style="color: #7f7f7f;">)</span> first<span style="color: #7f7f7f;">))</span>
+     <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span><span style="color: #7f7f7f;">))))</span>
+</pre>
+
+
+<p>
+<code>vel-towards</code> just takes the mouse x and y, deconstructs the <code>thing</code>
+and applies a normalized vector towards the mouse.
+</p>
+<p>
+<code>mouse-moved</code> will find all the relevant entities (ships) and pushes them
+through vel-towards, then transacts the new velocities.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">shoot-bullet</span> [[x y] {px <span style="color: #ddaa77; font-weight: bold;">:thing/posx</span> py <span style="color: #ddaa77; font-weight: bold;">:thing/posy</span> e <span style="color: #ddaa77; font-weight: bold;">:db/id</span>}]
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> [vx <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">-</span> x px<span style="color: #7f7f7f;">)</span> vy <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">-</span> y py<span style="color: #7f7f7f;">)</span> m <span style="color: #7f7f7f;">(</span>mag vx vy<span style="color: #7f7f7f;">)</span>
+        vx <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">*</span> 5 <span style="color: #7f7f7f;">(</span>norm vx 0 m<span style="color: #7f7f7f;">))</span> vy <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">*</span> 5 <span style="color: #7f7f7f;">(</span>norm vy 0 m<span style="color: #7f7f7f;">))</span>]
+    [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/spawn</span> <span style="color: #ddaa77; font-weight: bold;">:bullet</span> 2 nil [<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> px <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">*</span> 4 vx<span style="color: #7f7f7f;">))</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">+</span> py <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">*</span> 4 vy<span style="color: #7f7f7f;">))</span>] [2.0 2.0] [vx vy]<span style="color: #7f7f7f;">)</span>]<span style="color: #7f7f7f;">))</span>
+
+<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">mouse-click</span> []
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">let</span> [db <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">)</span>
+        pos [<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">double</span> <span style="color: #7f7f7f;">(</span>mouse-x<span style="color: #7f7f7f;">))</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">double</span> <span style="color: #7f7f7f;">(</span>mouse-y<span style="color: #7f7f7f;">))</span>]]
+    <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">case</span> <span style="color: #7f7f7f;">(</span>mouse-button<span style="color: #7f7f7f;">)</span>
+      <span style="color: #ddaa77; font-weight: bold;">:left</span>
+      <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">-&gt;&gt;</span>
+       <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">d/q</span> '[<span style="color: #ddaa77; font-weight: bold;">:find</span> ?e <span style="color: #ddaa77; font-weight: bold;">:where</span> [?e <span style="color: #ddaa77; font-weight: bold;">:entity/type</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span>]] db<span style="color: #7f7f7f;">)</span>
+       <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">mapcat</span>
+        <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">comp</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">partial</span> shoot-bullet pos<span style="color: #7f7f7f;">)</span>
+              <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">partial</span> d/entity db<span style="color: #7f7f7f;">)</span> first<span style="color: #7f7f7f;">))</span>
+       <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span><span style="color: #7f7f7f;">))</span>
+      <span style="color: #ddaa77; font-weight: bold;">:right</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> [<span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/spawn</span> <span style="color: #ddaa77; font-weight: bold;">:ship</span> 2 nil pos [10.0 10.0] [0.0 0.0]<span style="color: #7f7f7f;">)</span>]<span style="color: #7f7f7f;">)</span>
+      nil<span style="color: #7f7f7f;">)))</span>
+
+</pre>
+
+
+<p>
+Probably some of the bulkiest code in the game.. This just figures out
+where to spawn the bullets and what velocity to give it so that it
+shoots toward the mouse cursor.
+</p>
+<p>
+And, finally - the updated sketch with the click and move functions registered.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">start-sketch</span> []
+  <span style="color: #7f7f7f;">(</span>sketch
+   <span style="color: #ddaa77; font-weight: bold;">:title</span> <span style="color: #CC9393;">"Simple Space Shooter"</span>
+   <span style="color: #ddaa77; font-weight: bold;">:setup</span> #'setup
+   <span style="color: #ddaa77; font-weight: bold;">:draw</span> #'draw
+   <span style="color: #ddaa77; font-weight: bold;">:size</span> [800 600]
+   <span style="color: #ddaa77; font-weight: bold;">:mouse-moved</span> #'mouse-moved
+   <span style="color: #ddaa77; font-weight: bold;">:mouse-clicked</span> #'mouse-click<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+If you're curious, like me, about seeing this actually move around -
+throw this into your REPL:
+</p>
+
+
+
+<pre class="src src-clojure">=&gt; <span style="color: #7f7f7f;">(</span>start-sketch<span style="color: #7f7f7f;">)</span>
+...
+=&gt; <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">doseq</span> [_ <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">range</span> 10000<span style="color: #7f7f7f;">)</span>] <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">second</span> <span style="color: #7f7f7f;">(</span>game-loop 1 <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))))</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">Thread/sleep</span> 10<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+You'll need to C-c C-c to stop it from running.
+</p>
+<p>
+And.. now that you're back from trying to spawn little round circle
+and shoot them down with other round circles, let's tie this up into
+something we can <code>lein run</code>.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-8" class="outline-2">
+<h2 id="sec-8"><span class="section-number-2">8</span> Bootstrap into the game</h2>
+<div class="outline-text-2" id="text-8">
+
+
+<p>
+As usual, we begin by creating a new file at
+<code>src/space_shooter/core.clj</code> and setting up the namespace.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">ns</span> space-shooter.core
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:require</span> [space-shooter.db <span style="color: #ddaa77; font-weight: bold;">:as</span> db]<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:require</span> [space-shooter.loop <span style="color: #ddaa77; font-weight: bold;">:as</span> loop]<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:require</span> [space-shooter.ui <span style="color: #ddaa77; font-weight: bold;">:as</span> ui]<span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #ddaa77; font-weight: bold;">:gen-class</span><span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+We want a clean way of pausing the game, so lets create a quick set of
+functions for that:
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">def</span> <span style="color: #8cd0d3; font-style: italic;">paused</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">atom</span> false<span style="color: #7f7f7f;">))</span>
+
+<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">pause</span> []
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">reset!</span> paused true<span style="color: #7f7f7f;">))</span>
+
+<span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">unpause</span> []
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">reset!</span> paused false<span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+Then we'll just setup the loop like we did earlier, using a nicer
+recur though.
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">run-game</span> []
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">if-not</span> @paused
+    <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">do</span>
+      <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/tx</span> <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold; font-style: italic;">second</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">loop/game-loop</span> 0.5 <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/db</span><span style="color: #7f7f7f;">))))</span>
+      <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">Thread/sleep</span> 10<span style="color: #7f7f7f;">))</span>
+    <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">do</span> <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">Thread/sleep</span> 500<span style="color: #7f7f7f;">)))</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">recur</span><span style="color: #7f7f7f;">))</span>
+</pre>
+
+
+<p>
+And finally, the entry point of the whole thing
+</p>
+
+
+
+<pre class="src src-clojure"><span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">defn</span> <span style="color: #8cd0d3; font-style: italic;">-main</span> [&amp; args]
+  <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">db/setup-db</span><span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #8cd0d3; font-style: italic;">ui/start-sketch</span><span style="color: #7f7f7f;">)</span>
+  <span style="color: #7f7f7f;">(</span><span style="color: #F0DFAF; font-weight: bold;">doto</span> <span style="color: #7f7f7f;">(</span><span style="color: #94BFF3; font-weight: bold; font-style: italic;">Thread.</span> run-game<span style="color: #7f7f7f;">)</span>
+    <span style="color: #7f7f7f;">(</span><span style="color: #94BFF3; font-weight: bold; font-style: italic;">.setDaemon</span> true<span style="color: #7f7f7f;">)</span>
+    <span style="color: #7f7f7f;">(</span><span style="color: #94BFF3; font-weight: bold; font-style: italic;">.start</span><span style="color: #7f7f7f;">)))</span>
+</pre>
+
+
+<p>
+Quit the REPL at the command line by typing <code>quit</code> and then fire the
+whole thing up again using:
+</p>
+
+
+
+<pre class="src src-sh">lein run
+</pre>
+
+
+<p>
+Now you can blow up little spaceships to your hearts content.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-9" class="outline-2">
+<h2 id="sec-9"><span class="section-number-2">9</span> Conclusions</h2>
+<div class="outline-text-2" id="text-9">
+
+
+<p>
+This article ran over a fairly trivial implementation - you'd have
+noticed that the performance isn't stellar, but the focus is more on
+the design than the performance.
+</p>
+<p>
+There's also a couple of features I didn't get around to implementing,
+like level loading, entity ownership and score handling. But I think I
+showed enough of the game to illustrate the general design.
+</p>
+<p>
+I quite enjoyed the idea of using the bits of Datomic for this, I'm
+curious about the feasibility in the longer term. Possibly pulling out
+the parts of Datomic that would make sense from a game dev point of
+view. I also like the fact that you get a full replay of your game,
+almost free.
+</p>
+<p>
+One last thing to note is that I'm not entirely fond of the way Quil
+is built, since it makes no attempt at even veneering statefulness,
+but I use it since it's a very handy, quick and dirty visualization
+library.
+</p>
+<p>
+I hope you enjoyed this process, please drop me feedback on Twitter
+(<a href="http://www.twitter.com/CmdrDats">@CmdrDats</a>) or Github (<a href="http://github.com/CmdrDats">CmdrDats</a>) - I do appreciate it!
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-10" class="outline-2">
+<h2 id="sec-10"><span class="section-number-2">10</span> org-mode</h2>
+<div class="outline-text-2" id="text-10">
+
+
+<p>
+And the obligatory bit on org-mode. This was a bit of an exercise in
+literate programming. Pretty cool - you can download this raw game.org
+file and run it through <code>org-bable-tangle</code> in emacs to get the source
+extracted into the correct places for you. 
+</p>
+<p>
+You could just checkout the git repo as well though&hellip; anyhow! It did
+help keep the article and the actual code inline so that I didn't make
+a change in my codebase and forget to add it to the doc!
+</p>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+<p class="footnote"><sup><a class="footnum" name="fn.1" href="#fnr.1">1</a></sup> PS. <code>*1</code>, <code>*2</code> and <code>*3</code> refer to the last, second last last and third
+to last results in the REPL. There is not <code>*4</code> and upward. These are
+handy for REPL dev, but sometimes it's a bit too easy to lose your
+results, so I recommend using (def) as above to hold onto your objects
+when you might need them later on. Careful not to conflict with
+existing vars though!
+</p></div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div id="postamble">
+<p class="date">Date: 2013-11-05 22:54:34 SAST</p>
+<p class="author">Author: Deon Moolman</p>
+<p class="creator">Org version 7.8.11 with Emacs version 24</p>
+<a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>
+
+</div>
+</body>
+</html>
