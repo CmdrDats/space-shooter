@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="title" content="A small space shooter in Clojure."/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2013-11-05 22:54:34 SAST"/>
+<meta name="generated" content="2013-11-05 23:18:40 SAST"/>
 <meta name="author" content="Deon Moolman"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -99,44 +99,59 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#sec-1">1 Introduction</a></li>
-<li><a href="#sec-2">2 Act one - OO Design.</a></li>
-<li><a href="#sec-3">3 Act two - Functional approach</a></li>
-<li><a href="#sec-4">4 Setup the project</a>
+<li><a href="#sec-1">1 Prelude</a></li>
+<li><a href="#sec-2">2 Introduction</a></li>
+<li><a href="#sec-3">3 Act one - OO Design.</a></li>
+<li><a href="#sec-4">4 Act two - Functional approach</a></li>
+<li><a href="#sec-5">5 Setup the project</a>
 <ul>
-<li><a href="#sec-4-1">4.1 Create the project</a></li>
-<li><a href="#sec-4-2">4.2 Setup Dependencies</a></li>
-<li><a href="#sec-4-3">4.3 Fire up the REPL</a></li>
+<li><a href="#sec-5-1">5.1 Create the project</a></li>
+<li><a href="#sec-5-2">5.2 Setup Dependencies</a></li>
+<li><a href="#sec-5-3">5.3 Fire up the REPL</a></li>
 </ul>
 </li>
-<li><a href="#sec-5">5 Setup the state handling</a>
+<li><a href="#sec-6">6 Setup the state handling</a>
 <ul>
-<li><a href="#sec-5-1">5.1 DB Helper functions</a></li>
-<li><a href="#sec-5-2">5.2 Schema</a></li>
-<li><a href="#sec-5-3">5.3 Spawn functions</a></li>
-<li><a href="#sec-5-4">5.4 Try it out</a></li>
+<li><a href="#sec-6-1">6.1 DB Helper functions</a></li>
+<li><a href="#sec-6-2">6.2 Schema</a></li>
+<li><a href="#sec-6-3">6.3 Spawn functions</a></li>
+<li><a href="#sec-6-4">6.4 Try it out</a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6 Game loop</a>
+<li><a href="#sec-7">7 Game loop</a>
 <ul>
-<li><a href="#sec-6-1">6.1 Setup</a></li>
-<li><a href="#sec-6-2">6.2 Movement</a></li>
-<li><a href="#sec-6-3">6.3 Collision handling</a></li>
-<li><a href="#sec-6-4">6.4 Remove entities that have zero or lower health</a></li>
-<li><a href="#sec-6-5">6.5 Finally, putting it all together</a></li>
+<li><a href="#sec-7-1">7.1 Setup</a></li>
+<li><a href="#sec-7-2">7.2 Movement</a></li>
+<li><a href="#sec-7-3">7.3 Collision handling</a></li>
+<li><a href="#sec-7-4">7.4 Remove entities that have zero or lower health</a></li>
+<li><a href="#sec-7-5">7.5 Finally, putting it all together</a></li>
 </ul>
 </li>
-<li><a href="#sec-7">7 Visuals</a></li>
-<li><a href="#sec-8">8 Bootstrap into the game</a></li>
-<li><a href="#sec-9">9 Conclusions</a></li>
-<li><a href="#sec-10">10 org-mode</a></li>
+<li><a href="#sec-8">8 Visuals</a></li>
+<li><a href="#sec-9">9 Bootstrap into the game</a></li>
+<li><a href="#sec-10">10 Conclusions</a></li>
+<li><a href="#sec-11">11 org-mode</a></li>
 </ul>
 </div>
 </div>
 
 <div id="outline-container-1" class="outline-2">
-<h2 id="sec-1"><span class="section-number-2">1</span> Introduction</h2>
+<h2 id="sec-1"><span class="section-number-2">1</span> Prelude</h2>
 <div class="outline-text-2" id="text-1">
+
+
+<p>
+You can clone the repo for this project here :
+<a href="https://github.com/cmdrdats/space-shooter">https://github.com/cmdrdats/space-shooter</a> or go to the rendered
+version : <a href="http://cmdrdats.github.io/space-shooter">http://cmdrdats.github.io/space-shooter</a>
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Introduction</h2>
+<div class="outline-text-2" id="text-2">
 
 
 <p>
@@ -174,9 +189,9 @@ look like, should I build it in a Functional language, like Clojure?"
 
 </div>
 
-<div id="outline-container-2" class="outline-2">
-<h2 id="sec-2"><span class="section-number-2">2</span> Act one - OO Design.</h2>
-<div class="outline-text-2" id="text-2">
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> Act one - OO Design.</h2>
+<div class="outline-text-2" id="text-3">
 
 
 <p>
@@ -200,9 +215,9 @@ this, it should do just fine.
 
 </div>
 
-<div id="outline-container-3" class="outline-2">
-<h2 id="sec-3"><span class="section-number-2">3</span> Act two - Functional approach</h2>
-<div class="outline-text-2" id="text-3">
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> Act two - Functional approach</h2>
+<div class="outline-text-2" id="text-4">
 
 
 <p>
@@ -250,17 +265,17 @@ Let's build some code in an attempt to clear this up
 
 </div>
 
-<div id="outline-container-4" class="outline-2">
-<h2 id="sec-4"><span class="section-number-2">4</span> Setup the project</h2>
-<div class="outline-text-2" id="text-4">
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> Setup the project</h2>
+<div class="outline-text-2" id="text-5">
 
 
 
 </div>
 
-<div id="outline-container-4-1" class="outline-3">
-<h3 id="sec-4-1"><span class="section-number-3">4.1</span> Create the project</h3>
-<div class="outline-text-3" id="text-4-1">
+<div id="outline-container-5-1" class="outline-3">
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> Create the project</h3>
+<div class="outline-text-3" id="text-5-1">
 
 
 <p>
@@ -282,9 +297,9 @@ it for the rest of this article.
 
 </div>
 
-<div id="outline-container-4-2" class="outline-3">
-<h3 id="sec-4-2"><span class="section-number-3">4.2</span> Setup Dependencies</h3>
-<div class="outline-text-3" id="text-4-2">
+<div id="outline-container-5-2" class="outline-3">
+<h3 id="sec-5-2"><span class="section-number-3">5.2</span> Setup Dependencies</h3>
+<div class="outline-text-3" id="text-5-2">
 
 
 <p>
@@ -314,9 +329,9 @@ want to visualize stuff later on.
 
 </div>
 
-<div id="outline-container-4-3" class="outline-3">
-<h3 id="sec-4-3"><span class="section-number-3">4.3</span> Fire up the REPL</h3>
-<div class="outline-text-3" id="text-4-3">
+<div id="outline-container-5-3" class="outline-3">
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> Fire up the REPL</h3>
+<div class="outline-text-3" id="text-5-3">
 
 
 <p>
@@ -340,9 +355,9 @@ code snippets below into the REPL directly.
 
 </div>
 
-<div id="outline-container-5" class="outline-2">
-<h2 id="sec-5"><span class="section-number-2">5</span> Setup the state handling</h2>
-<div class="outline-text-2" id="text-5">
+<div id="outline-container-6" class="outline-2">
+<h2 id="sec-6"><span class="section-number-2">6</span> Setup the state handling</h2>
+<div class="outline-text-2" id="text-6">
 
 
 <p>
@@ -372,9 +387,9 @@ make it a bit quicker to do a few common things with the db.
 
 </div>
 
-<div id="outline-container-5-1" class="outline-3">
-<h3 id="sec-5-1"><span class="section-number-3">5.1</span> DB Helper functions</h3>
-<div class="outline-text-3" id="text-5-1">
+<div id="outline-container-6-1" class="outline-3">
+<h3 id="sec-6-1"><span class="section-number-3">6.1</span> DB Helper functions</h3>
+<div class="outline-text-3" id="text-6-1">
 
 
 <p>
@@ -444,9 +459,9 @@ function so that we don't end up overwriting accounting style values
 
 </div>
 
-<div id="outline-container-5-2" class="outline-3">
-<h3 id="sec-5-2"><span class="section-number-3">5.2</span> Schema</h3>
-<div class="outline-text-3" id="text-5-2">
+<div id="outline-container-6-2" class="outline-3">
+<h3 id="sec-6-2"><span class="section-number-3">6.2</span> Schema</h3>
+<div class="outline-text-3" id="text-6-2">
 
 
 <p>
@@ -544,9 +559,9 @@ db, install our tx function and get the schema in
 
 </div>
 
-<div id="outline-container-5-3" class="outline-3">
-<h3 id="sec-5-3"><span class="section-number-3">5.3</span> Spawn functions</h3>
-<div class="outline-text-3" id="text-5-3">
+<div id="outline-container-6-3" class="outline-3">
+<h3 id="sec-6-3"><span class="section-number-3">6.3</span> Spawn functions</h3>
+<div class="outline-text-3" id="text-6-3">
 
 
 <p>
@@ -586,9 +601,9 @@ a spawning function:
 
 </div>
 
-<div id="outline-container-5-4" class="outline-3">
-<h3 id="sec-5-4"><span class="section-number-3">5.4</span> Try it out</h3>
-<div class="outline-text-3" id="text-5-4">
+<div id="outline-container-6-4" class="outline-3">
+<h3 id="sec-6-4"><span class="section-number-3">6.4</span> Try it out</h3>
+<div class="outline-text-3" id="text-6-4">
 
 
 <p>
@@ -700,17 +715,17 @@ should need in the game.
 
 </div>
 
-<div id="outline-container-6" class="outline-2">
-<h2 id="sec-6"><span class="section-number-2">6</span> Game loop</h2>
-<div class="outline-text-2" id="text-6">
+<div id="outline-container-7" class="outline-2">
+<h2 id="sec-7"><span class="section-number-2">7</span> Game loop</h2>
+<div class="outline-text-2" id="text-7">
 
 
 
 </div>
 
-<div id="outline-container-6-1" class="outline-3">
-<h3 id="sec-6-1"><span class="section-number-3">6.1</span> Setup</h3>
-<div class="outline-text-3" id="text-6-1">
+<div id="outline-container-7-1" class="outline-3">
+<h3 id="sec-7-1"><span class="section-number-3">7.1</span> Setup</h3>
+<div class="outline-text-3" id="text-7-1">
 
 
 <p>
@@ -752,9 +767,9 @@ that in favour of a simple example.
 
 </div>
 
-<div id="outline-container-6-2" class="outline-3">
-<h3 id="sec-6-2"><span class="section-number-3">6.2</span> Movement</h3>
-<div class="outline-text-3" id="text-6-2">
+<div id="outline-container-7-2" class="outline-3">
+<h3 id="sec-7-2"><span class="section-number-3">7.2</span> Movement</h3>
+<div class="outline-text-3" id="text-7-2">
 
 
 <p>
@@ -837,9 +852,9 @@ Beautiful. That worked nicely.
 
 </div>
 
-<div id="outline-container-6-3" class="outline-3">
-<h3 id="sec-6-3"><span class="section-number-3">6.3</span> Collision handling</h3>
-<div class="outline-text-3" id="text-6-3">
+<div id="outline-container-7-3" class="outline-3">
+<h3 id="sec-7-3"><span class="section-number-3">7.3</span> Collision handling</h3>
+<div class="outline-text-3" id="text-7-3">
 
 
 <p>
@@ -998,9 +1013,9 @@ and see that they have indeed been correctly changed.
 
 </div>
 
-<div id="outline-container-6-4" class="outline-3">
-<h3 id="sec-6-4"><span class="section-number-3">6.4</span> Remove entities that have zero or lower health</h3>
-<div class="outline-text-3" id="text-6-4">
+<div id="outline-container-7-4" class="outline-3">
+<h3 id="sec-7-4"><span class="section-number-3">7.4</span> Remove entities that have zero or lower health</h3>
+<div class="outline-text-3" id="text-7-4">
 
 
 <p>
@@ -1095,9 +1110,9 @@ step back into a previous state, run it until it does work correctly.
 
 </div>
 
-<div id="outline-container-6-5" class="outline-3">
-<h3 id="sec-6-5"><span class="section-number-3">6.5</span> Finally, putting it all together</h3>
-<div class="outline-text-3" id="text-6-5">
+<div id="outline-container-7-5" class="outline-3">
+<h3 id="sec-7-5"><span class="section-number-3">7.5</span> Finally, putting it all together</h3>
+<div class="outline-text-3" id="text-7-5">
 
 
 <p>
@@ -1157,9 +1172,9 @@ the speed of how fast that should cycle.
 
 </div>
 
-<div id="outline-container-7" class="outline-2">
-<h2 id="sec-7"><span class="section-number-2">7</span> Visuals</h2>
-<div class="outline-text-2" id="text-7">
+<div id="outline-container-8" class="outline-2">
+<h2 id="sec-8"><span class="section-number-2">8</span> Visuals</h2>
+<div class="outline-text-2" id="text-8">
 
 
 <p>
@@ -1433,9 +1448,9 @@ something we can <code>lein run</code>.
 
 </div>
 
-<div id="outline-container-8" class="outline-2">
-<h2 id="sec-8"><span class="section-number-2">8</span> Bootstrap into the game</h2>
-<div class="outline-text-2" id="text-8">
+<div id="outline-container-9" class="outline-2">
+<h2 id="sec-9"><span class="section-number-2">9</span> Bootstrap into the game</h2>
+<div class="outline-text-2" id="text-9">
 
 
 <p>
@@ -1520,9 +1535,9 @@ Now you can blow up little spaceships to your hearts content.
 
 </div>
 
-<div id="outline-container-9" class="outline-2">
-<h2 id="sec-9"><span class="section-number-2">9</span> Conclusions</h2>
-<div class="outline-text-2" id="text-9">
+<div id="outline-container-10" class="outline-2">
+<h2 id="sec-10"><span class="section-number-2">10</span> Conclusions</h2>
+<div class="outline-text-2" id="text-10">
 
 
 <p>
@@ -1556,9 +1571,9 @@ I hope you enjoyed this process, please drop me feedback on Twitter
 
 </div>
 
-<div id="outline-container-10" class="outline-2">
-<h2 id="sec-10"><span class="section-number-2">10</span> org-mode</h2>
-<div class="outline-text-2" id="text-10">
+<div id="outline-container-11" class="outline-2">
+<h2 id="sec-11"><span class="section-number-2">11</span> org-mode</h2>
+<div class="outline-text-2" id="text-11">
 
 
 <p>
@@ -1589,7 +1604,7 @@ existing vars though!
 </div>
 
 <div id="postamble">
-<p class="date">Date: 2013-11-05 22:54:34 SAST</p>
+<p class="date">Date: 2013-11-05 23:18:40 SAST</p>
 <p class="author">Author: Deon Moolman</p>
 <p class="creator">Org version 7.8.11 with Emacs version 24</p>
 <a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>
